@@ -13,17 +13,18 @@ import (
 )
 
 func TestKafka(t *testing.T) {
+	const clusterID = "q1Sh-9_ISia_zwGINzRvyQ"
 	topic := "some-topic"
 
 	ctx := context.Background()
 
-	kafkaContainer, err := kafka.Run(ctx, "confluentinc/confluent-local:7.5.0", kafka.WithClusterID("kraftCluster"))
+	kafkaContainer, err := kafka.Run(ctx, "confluentinc/confluent-local:7.5.0", kafka.WithClusterID(clusterID))
 	testcontainers.CleanupContainer(t, kafkaContainer)
 	require.NoError(t, err)
 
 	assertAdvertisedListeners(t, kafkaContainer)
 
-	require.Truef(t, strings.EqualFold(kafkaContainer.ClusterID, "kraftCluster"), "expected clusterID to be %s, got %s", "kraftCluster", kafkaContainer.ClusterID)
+	require.Truef(t, strings.EqualFold(kafkaContainer.ClusterID, clusterID), "expected clusterID to be %s, got %s", clusterID, kafkaContainer.ClusterID)
 
 	// getBrokers {
 	brokers, err := kafkaContainer.Brokers(ctx)
@@ -67,9 +68,11 @@ func TestKafka(t *testing.T) {
 }
 
 func TestKafka_invalidVersion(t *testing.T) {
+	const clusterID = "MkU3OEVBNTcwNTJENDM2Qk"
+
 	ctx := context.Background()
 
-	ctr, err := kafka.Run(ctx, "confluentinc/confluent-local:6.3.3", kafka.WithClusterID("kraftCluster"))
+	ctr, err := kafka.Run(ctx, "confluentinc/confluent-local:6.3.3", kafka.WithClusterID(clusterID))
 	testcontainers.CleanupContainer(t, ctr)
 	require.Error(t, err)
 }

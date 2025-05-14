@@ -10,12 +10,14 @@ import (
 )
 
 func ExampleRun() {
+	const clusterID = "q1Sh-9_ISia_zwGINzRvyQ"
+
 	// runKafkaContainer {
 	ctx := context.Background()
 
 	kafkaContainer, err := kafka.Run(ctx,
 		"confluentinc/confluent-local:7.5.0",
-		kafka.WithClusterID("test-cluster"),
+		kafka.WithClusterID(clusterID),
 	)
 	defer func() {
 		if err := testcontainers.TerminateContainer(kafkaContainer); err != nil {
@@ -38,6 +40,6 @@ func ExampleRun() {
 	fmt.Println(state.Running)
 
 	// Output:
-	// test-cluster
+	// q1Sh-9_ISia_zwGINzRvyQ
 	// true
 }
