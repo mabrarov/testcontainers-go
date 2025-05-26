@@ -13,7 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/log"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
@@ -56,7 +55,7 @@ func RunContainer(ctx context.Context, opts ...testcontainers.ContainerCustomize
 
 // Run creates an instance of the K3s container type
 func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustomizer) (*K3sContainer, error) {
-	host, err := getContainerHost(ctx, opts...)
+	host, err := testcontainers.ContainerHost(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,32 +108,6 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 	}
 
 	return c, nil
-}
-
-func getContainerHost(ctx context.Context, opts ...testcontainers.ContainerCustomizer) (string, error) {
-	// Use a dummy request to get the provider from options.
-	var req testcontainers.GenericContainerRequest
-	for _, opt := range opts {
-		if err := opt.Customize(&req); err != nil {
-			return "", err
-		}
-	}
-
-	logging := req.Logger
-	if logging == nil {
-		logging = log.Default()
-	}
-	p, err := req.ProviderType.GetProvider(testcontainers.WithLogger(logging))
-	if err != nil {
-		return "", err
-	}
-
-	if p, ok := p.(*testcontainers.DockerProvider); ok {
-		return p.DaemonHost(ctx)
-	}
-
-	// Fall back to localhost.
-	return "localhost", nil
 }
 
 // GetKubeConfig returns the modified kubeconfig with server url
