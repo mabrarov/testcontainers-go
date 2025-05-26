@@ -99,7 +99,7 @@ func Run(ctx context.Context, img string, opts ...testcontainers.ContainerCustom
 		envVar = localstackHostEnvVar
 	}
 
-	hostnameExternalReason, err := configureDockerHost(&localStackReq, envVar)
+	hostnameExternalReason, err := configureDockerHost(&localStackReq, envVar, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func StartContainer(ctx context.Context, overrideReq OverrideContainerRequestOpt
 	return RunContainer(ctx, overrideReq)
 }
 
-func configureDockerHost(req *LocalStackContainerRequest, envVar string) (string, error) {
+func configureDockerHost(req *LocalStackContainerRequest, envVar string, opts ...testcontainers.ContainerCustomizer) (string, error) {
 	reason := ""
 
 	if _, ok := req.Env[envVar]; ok {
@@ -141,13 +141,7 @@ func configureDockerHost(req *LocalStackContainerRequest, envVar string) (string
 		return "to match last network alias on container with non-default network", nil
 	}
 
-	dockerProvider, err := testcontainers.NewDockerProvider()
-	if err != nil {
-		return reason, err
-	}
-	defer dockerProvider.Close()
-
-	daemonHost, err := dockerProvider.DaemonHost(context.Background())
+	daemonHost, err := testcontainers.ContainerHost(context.Background(), opts...)
 	if err != nil {
 		return reason, err
 	}

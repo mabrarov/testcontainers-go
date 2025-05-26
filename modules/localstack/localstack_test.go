@@ -61,12 +61,7 @@ func TestConfigureDockerHost(t *testing.T) {
 		})
 
 		t.Run("HOSTNAME_EXTERNAL matches the daemon host because there are no aliases", func(t *testing.T) {
-			dockerProvider, err := testcontainers.NewDockerProvider()
-			require.NoError(t, err)
-			defer dockerProvider.Close()
-
-			// because the daemon host could be a remote one, we need to get it from the provider
-			expectedDaemonHost, err := dockerProvider.DaemonHost(context.Background())
+			expectedDaemonHost, err := testcontainers.ContainerHost(context.Background())
 			require.NoError(t, err)
 
 			req := generateContainerRequest()
