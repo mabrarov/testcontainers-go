@@ -20,7 +20,6 @@ import (
 	"github.com/twmb/franz-go/pkg/sasl/scram"
 
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/log"
 	"github.com/testcontainers/testcontainers-go/modules/redpanda"
 	"github.com/testcontainers/testcontainers-go/network"
 )
@@ -451,7 +450,7 @@ func TestRedpandaProduceWithAutoCreateTopics(t *testing.T) {
 func TestRedpandaWithTLS(t *testing.T) {
 	ctx := context.Background()
 
-	containerHostAddress, err := containerHost(ctx)
+	containerHostAddress, err := testcontainers.ContainerHost(ctx)
 	require.NoError(t, err)
 	cert, err := tlscert.SelfSignedFromRequestE(tlscert.Request{
 		Name: "client",
@@ -514,7 +513,7 @@ func TestRedpandaWithTLS(t *testing.T) {
 func TestRedpandaWithTLSAndSASL(t *testing.T) {
 	ctx := context.Background()
 
-	containerHostAddress, err := containerHost(ctx)
+	containerHostAddress, err := testcontainers.ContainerHost(ctx)
 	require.NoError(t, err)
 	cert, err := tlscert.SelfSignedFromRequestE(tlscert.Request{
 		Name: "client",
@@ -699,30 +698,4 @@ func TestRedpandaBootstrapConfig(t *testing.T) {
 		needsRestart := data[0]["restart"].(bool)
 		require.False(t, needsRestart)
 	}
-}
-
-func containerHost(ctx context.Context, opts ...testcontainers.ContainerCustomizer) (string, error) {
-	// Use a dummy request to get the provider from options.
-	var req testcontainers.GenericContainerRequest
-	for _, opt := range opts {
-		if err := opt.Customize(&req); err != nil {
-			return "", err
-		}
-	}
-
-	logging := req.Logger
-	if logging == nil {
-		logging = log.Default()
-	}
-	p, err := req.ProviderType.GetProvider(testcontainers.WithLogger(logging))
-	if err != nil {
-		return "", err
-	}
-
-	if p, ok := p.(*testcontainers.DockerProvider); ok {
-		return p.DaemonHost(ctx)
-	}
-
-	// Fall back to localhost.
-	return "localhost", nil
 }

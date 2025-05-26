@@ -148,3 +148,33 @@ func Run(ctx context.Context, img string, opts ...ContainerCustomizer) (*DockerC
 
 	return c, nil
 }
+
+// ContainerHost gets host (IP or name) of the docker daemon where container port is exposed.
+// Note: prefer using Container.Host when it is possible.
+// Warning: this function is based on Docker host setting, it will fail if using an SSH tunnel.
+// "TESTCONTAINERS_HOST_OVERRIDE" env variable can be used to customize host returned by this function.
+func ContainerHost(ctx context.Context, opts ...ContainerCustomizer) (string, error) {
+	// Use a dummy request to get the provider from options.
+	var req GenericContainerRequest
+	for _, opt := range opts {
+		if err := opt.Customize(&req); err != nil {
+			return "", err
+		}
+	}
+
+	logging := req.Logger
+	if logging == nil {
+		logging = log.Default()
+	}
+	p, err := req.ProviderType.GetProvider(WithLogger(logging))
+	if err != nil {
+		return "", err
+	}
+
+	if p, ok := p.(*DockerProvider); ok {
+		return p.DaemonHost(ctx)
+	}
+
+	// Fall back to localhost.
+	return "localhost", nil
+}
