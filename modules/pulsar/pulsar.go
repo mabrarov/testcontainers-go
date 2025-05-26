@@ -43,13 +43,7 @@ func (c *Container) HTTPServiceURL(ctx context.Context) (string, error) {
 }
 
 func (c *Container) resolveURL(ctx context.Context, port nat.Port) (string, error) {
-	provider, err := testcontainers.NewDockerProvider()
-	if err != nil {
-		return "", err
-	}
-	defer provider.Close()
-
-	host, err := provider.DaemonHost(ctx)
+	host, err := c.Host(ctx)
 	if err != nil {
 		return "", err
 	}
