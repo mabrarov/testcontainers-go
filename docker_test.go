@@ -83,6 +83,42 @@ func TestContainerWithHostNetworkOptions(t *testing.T) {
 
 	_, err = http.Get(endpoint)
 	require.NoErrorf(t, err, "Expected OK response")
+
+	dp, err := dockerProvider(opts...)
+	require.NoError(t, err)
+
+	defer func() { _ = dp.Close() }()
+
+	reader, _, err := dp.Client().CopyFromContainer(ctx, nginxC.ID, "/etc/nginx")
+	require.NoError(t, err)
+
+	defer func() { _ = reader.Close() }()
+}
+
+func dockerProvider(opts ...ContainerCustomizer) (*DockerProvider, error) {
+	// Use a dummy request to get the provider from options.
+	var req GenericContainerRequest
+	for _, opt := range opts {
+		if err := opt.Customize(&req); err != nil {
+			return nil, err
+		}
+	}
+
+	logging := req.Logger
+	if logging == nil {
+		logging = log.Default()
+	}
+
+	p, err := req.ProviderType.GetProvider(WithLogger(logging))
+	if err != nil {
+		return nil, err
+	}
+
+	if dp, ok := p.(*DockerProvider); ok {
+		return dp, nil
+	}
+
+	return nil, fmt.Errorf("unknown type of provider: %T", p)
 }
 
 func TestContainerWithHostNetworkOptions_UseExposePortsFromImageConfigs(t *testing.T) {
